@@ -1,0 +1,41 @@
+name: Build and deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build
+        run: |
+          npm i
+          npm run build
+      - name: Deploy
+        run: |
+          git pull &&
+          git switch build &&
+          git reset --hard 3f12b666fff5602436fb04659a2c5f1fe9319d8a &&
+          git config --global user.name "GitHub Actions" &&
+          git config --global user.email "action@github.com" &&
+          mv .git build &&
+          cd build &&
+          git add . &&
+          git commit -m "build" &&
+          git push --force
